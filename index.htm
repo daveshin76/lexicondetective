@@ -2,34 +2,34 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>Lexical Detective: Code Name 100</title>
+    <title>Lexical Detective 100</title>
     <style>
-        :root { --bg: #0a0a0c; --card: #16161a; --accent: #00e676; --error: #ff5252; --text: #eceff1; --dim: #777; }
-        body { background: var(--bg); color: var(--text); font-family: sans-serif; display: flex; flex-direction: column; align-items: center; margin: 0; padding: 20px; min-height: 100vh; }
-        #game-board { width: 100%; max-width: 800px; background: var(--card); border: 1px solid #333; border-radius: 12px; padding: 30px; position: relative; box-shadow: 0 20px 50px rgba(0,0,0,0.7); }
+        :root { --bg: #0a0a0c; --card: #16161a; --accent: #00e676; --error: #ff5252; --text: #eceff1; }
+        body { background: var(--bg); color: var(--text); font-family: sans-serif; display: flex; flex-direction: column; align-items: center; margin: 0; padding: 20px; }
+        #game-board { width: 100%; max-width: 800px; background: var(--card); border: 1px solid #333; border-radius: 12px; padding: 30px; position: relative; }
         #story-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(10,10,12,0.98); z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px; box-sizing: border-box; text-align: center; border-radius: 12px; }
         #story-text { font-size: 1.1rem; line-height: 1.8; color: var(--accent); margin-bottom: 30px; white-space: pre-wrap; }
-        .next-btn { background: transparent; border: 1px solid var(--accent); color: var(--accent); padding: 12px 30px; border-radius: 4px; cursor: pointer; font-size: 1rem; }
+        .next-btn { background: transparent; border: 1px solid var(--accent); color: var(--accent); padding: 12px 30px; border-radius: 4px; cursor: pointer; }
         .next-btn:hover { background: var(--accent); color: #000; }
         #sentence-container { background: #212121; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 5px solid var(--accent); }
         .slot { display: inline-block; min-width: 70px; border-bottom: 2px solid var(--accent); text-align: center; color: var(--accent); margin: 0 5px; font-weight: bold; }
         #options { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; }
-        .word-btn { background: #2c2c2c; border: 1px solid #444; color: var(--text); padding: 12px; border-radius: 6px; cursor: pointer; font-size: 0.9rem; }
+        .word-btn { background: #2c2c2c; border: 1px solid #444; color: var(--text); padding: 12px; border-radius: 6px; cursor: pointer; }
         .word-btn:hover { border-color: var(--accent); background: #333; }
         #feedback { margin: 15px 0; height: 20px; font-weight: bold; text-align: center; }
-        .progress-container { width: 100%; height: 6px; background: #333; border-radius: 3px; margin-top: 20px; overflow: hidden; }
+        .progress-container { width: 100%; height: 6px; background: #333; border-radius: 3px; overflow: hidden; }
         #progress-bar { height: 100%; width: 0%; background: var(--accent); transition: width 0.3s; }
         .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
-    <h2 style="color: var(--dim); letter-spacing: 2px;">LEXICAL DETECTIVE 100</h2>
+    <h2 style="color: #777; letter-spacing: 2px;">LEXICAL DETECTIVE 100</h2>
 
     <div id="game-board">
-        <div id="story-overlay">
+        <div id="story-overlay" class="hidden">
             <div id="story-text"></div>
-            <button class="next-btn" onclick="closeStory()">수사 시작</button>
+            <button class="next-btn" onclick="closeStory()">확인</button>
         </div>
 
         <div id="play-area">
@@ -48,22 +48,21 @@
 
         <div id="ending" class="hidden" style="text-align: center; padding: 50px;">
             <h1 style="color: var(--accent);">CASE CLOSED</h1>
-            <p>100개의 모든 단서를 해독했습니다. 당신은 최고의 탐정입니다.</p>
-            <button class="next-btn" onclick="location.reload()">처음부터 다시</button>
+            <button class="next-btn" onclick="location.reload()">다시 시작</button>
         </div>
     </div>
 
     <script>
         const stories = [
             { trigger: 0, title: "INTRO: 사라진 블루 벨", content: "박물관의 보물 '블루 벨'이 도난당했습니다.\n현장의 암호를 풀어 첫 번째 단서를 확보하십시오!" },
-            { trigger: 20, title: "QUEST: 용의자 심문", content: "용의자들의 진술에서 모순을 찾아내야 합니다.\n그들이 사용하는 전치사들을 유심히 살피십시오." },
+            { trigger: 20, title: "QUEST: 용의자 심문", content: "용의자들의 진술에서 모순을 찾아내야 합니다.\n전치사들을 유심히 살피십시오." },
             { trigger: 40, title: "QUEST: 증거 재구성", content: "범인이 증거를 교체하고 변형한 흔적을 발견했습니다.\n데이터를 대조하여 범행 수법을 밝히십시오." },
             { trigger: 60, title: "QUEST: 마지막 추격", content: "범인의 은신처를 찾아냈습니다!\n정확한 법적 용어로 체포 영장을 완성하십시오." },
             { trigger: 80, title: "QUEST: 정의 구현", content: "범인을 취조실에 가두었습니다.\n모든 기록을 정리하여 사건을 종결하십시오." }
         ];
 
+        // [데이터 100개 생략 방지 - 전체 포함]
         const allData = [
-            /* 1-20 */
             { v: "attribute", p: "to", ko: "사건을 보안 요원의 실수로 [돌리다].", en: "The captain tried to ___ the error ___ the rookie's negligence." },
             { v: "ascribe", p: "to", ko: "시스템 오류를 노후 장비의 결과로 [여기다].", en: "Experts ___ the glitch ___ outdated hardware." },
             { v: "distinguish", p: "from", ko: "진짜와 가짜를 [구별하다].", en: "A pro can ___ the fake diamond ___ the real one." },
@@ -173,14 +172,17 @@
         let idx = 0;
         let selV = "";
         let selP = "";
+        let shownStories = []; // 이미 본 스토리 저장소
 
         const stageNames = ["STAGE 1: 현장 조사", "STAGE 2: 용의자 심문", "STAGE 3: 증거 분석", "STAGE 4: 범인 검거", "STAGE 5: 사건 종결"];
 
         function checkStory() {
             const story = stories.find(s => s.trigger === idx);
-            if(story) {
+            // 해당 트리거가 존재하고, 아직 보여주지 않은 경우에만 표시
+            if(story && !shownStories.includes(idx)) {
                 document.getElementById('story-text').innerHTML = `<h2 style="color:#fff">${story.title}</h2>${story.content}`;
                 document.getElementById('story-overlay').classList.remove('hidden');
+                shownStories.push(idx); // 보았다고 표시
             }
         }
 
@@ -203,10 +205,11 @@
             
             const ops = document.getElementById('options');
             ops.innerHTML = "";
-            let pool = [data.v, data.p, "of", "to", "from", "with", "for", "on", "in", "into account", "for granted", "as", "at"];
+            let pool = [data.v, data.p, "of", "to", "from", "with", "for", "on", "in", "as", "at", "into account", "for granted"];
             let shuffle = [...new Set(pool)].sort(() => Math.random() - 0.5).slice(0, 8);
             if(!shuffle.includes(data.v)) shuffle[0] = data.v;
             if(!shuffle.includes(data.p)) shuffle[1] = data.p;
+            
             shuffle.sort(() => Math.random() - 0.5).forEach(w => {
                 const b = document.createElement('button');
                 b.className = 'word-btn';
@@ -214,7 +217,7 @@
                 b.onclick = () => {
                     const fb = document.getElementById('feedback');
                     if(!selV) {
-                        if(w === data.v) { selV = w; fb.innerText = "Good! Preposition next."; fb.style.color = "var(--accent)"; draw(); }
+                        if(w === data.v) { selV = w; fb.innerText = "Good!"; fb.style.color = "var(--accent)"; draw(); }
                         else { fb.innerText = "Wrong Verb."; fb.style.color = "var(--error)"; }
                     } else {
                         if(w === data.p) { 
