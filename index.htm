@@ -2,62 +2,68 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lexical Detective: 100 Phrases</title>
+    <title>Lexical Detective: Code Name 100</title>
     <style>
-        :root { --bg: #0a0a0c; --card: #16161a; --accent: #00e676; --error: #ff5252; --text: #eceff1; }
-        body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; flex-direction: column; align-items: center; margin: 0; padding: 20px; min-height: 100vh; }
-        #game-board { width: 100%; max-width: 800px; background: var(--card); border: 1px solid #333; border-radius: 12px; padding: 30px; box-shadow: 0 20px 50px rgba(0,0,0,0.7); position: relative; }
-        .header { border-bottom: 2px solid #333; padding-bottom: 15px; margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center; }
-        #stage-title { color: var(--accent); font-weight: bold; font-size: 1.2rem; }
-        #sentence-container { background: #212121; padding: 25px; border-radius: 8px; margin-bottom: 30px; border-left: 5px solid var(--accent); }
-        #ko-desc { font-size: 1rem; color: #aaa; margin-bottom: 15px; line-height: 1.5; }
-        #en-sentence { font-size: 1.4rem; line-height: 1.8; letter-spacing: 0.5px; }
-        .slot { display: inline-block; min-width: 100px; border-bottom: 2px solid var(--accent); text-align: center; margin: 0 8px; color: var(--accent); padding: 0 5px; cursor: default; }
-        #options { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
-        .word-btn { background: #2c2c2c; border: 1px solid #444; color: var(--text); padding: 12px; border-radius: 6px; cursor: pointer; transition: all 0.2s; font-size: 1rem; }
-        .word-btn:hover { background: #3d3d3d; border-color: var(--accent); }
-        .word-btn:active { transform: scale(0.95); }
-        #feedback { margin-top: 20px; text-align: center; height: 30px; font-weight: bold; font-size: 1.1rem; }
-        .progress-container { width: 100%; height: 6px; background: #333; border-radius: 3px; margin-top: 30px; overflow: hidden; }
-        #progress-bar { height: 100%; width: 0%; background: var(--accent); transition: width 0.3s ease; }
-        .hidden { display: none; }
-        #ending-screen { text-align: center; padding: 50px; }
-        #ending-screen h2 { color: var(--accent); font-size: 2.5rem; }
+        :root { --bg: #0a0a0c; --card: #16161a; --accent: #00e676; --error: #ff5252; --text: #eceff1; --dim: #777; }
+        body { background: var(--bg); color: var(--text); font-family: sans-serif; display: flex; flex-direction: column; align-items: center; margin: 0; padding: 20px; min-height: 100vh; }
+        #game-board { width: 100%; max-width: 800px; background: var(--card); border: 1px solid #333; border-radius: 12px; padding: 30px; position: relative; box-shadow: 0 20px 50px rgba(0,0,0,0.7); }
+        #story-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(10,10,12,0.98); z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px; box-sizing: border-box; text-align: center; border-radius: 12px; }
+        #story-text { font-size: 1.1rem; line-height: 1.8; color: var(--accent); margin-bottom: 30px; white-space: pre-wrap; }
+        .next-btn { background: transparent; border: 1px solid var(--accent); color: var(--accent); padding: 12px 30px; border-radius: 4px; cursor: pointer; font-size: 1rem; }
+        .next-btn:hover { background: var(--accent); color: #000; }
+        #sentence-container { background: #212121; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 5px solid var(--accent); }
+        .slot { display: inline-block; min-width: 70px; border-bottom: 2px solid var(--accent); text-align: center; color: var(--accent); margin: 0 5px; font-weight: bold; }
+        #options { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; }
+        .word-btn { background: #2c2c2c; border: 1px solid #444; color: var(--text); padding: 12px; border-radius: 6px; cursor: pointer; font-size: 0.9rem; }
+        .word-btn:hover { border-color: var(--accent); background: #333; }
+        #feedback { margin: 15px 0; height: 20px; font-weight: bold; text-align: center; }
+        .progress-container { width: 100%; height: 6px; background: #333; border-radius: 3px; margin-top: 20px; overflow: hidden; }
+        #progress-bar { height: 100%; width: 0%; background: var(--accent); transition: width 0.3s; }
+        .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
-    <h2 style="margin-bottom: 10px; letter-spacing: 2px;">LEXICAL DETECTIVE</h2>
-    <p style="margin-bottom: 30px; color: #777;">100개의 단어로 사건을 해결하고 장기 기억을 완성하십시오.</p>
+    <h2 style="color: var(--dim); letter-spacing: 2px;">LEXICAL DETECTIVE 100</h2>
 
     <div id="game-board">
+        <div id="story-overlay">
+            <div id="story-text"></div>
+            <button class="next-btn" onclick="closeStory()">수사 시작</button>
+        </div>
+
         <div id="play-area">
-            <div class="header">
-                <div id="stage-title">STAGE 1: 현장 조사</div>
-                <div id="progress-text">0 / 100</div>
+            <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #333; padding-bottom: 10px;">
+                <div id="stage-title" style="color: var(--accent); font-weight: bold;">STAGE 1</div>
+                <div id="progress-text">1 / 100</div>
             </div>
-
             <div id="sentence-container">
-                <div id="ko-desc"></div>
-                <div id="en-sentence"></div>
+                <div id="ko-desc" style="color: #aaa; margin-bottom: 10px;"></div>
+                <div id="en-sentence" style="font-size: 1.3rem;"></div>
             </div>
-
             <div id="options"></div>
             <div id="feedback"></div>
             <div class="progress-container"><div id="progress-bar"></div></div>
         </div>
 
-        <div id="ending-screen" class="hidden">
-            <h2>CASE CLOSED</h2>
-            <p>축하합니다! 100개의 핵심 구문을 모두 마스터하여 범인을 검거했습니다.</p>
-            <button class="word-btn" onclick="location.reload()">다시 수사하기</button>
+        <div id="ending" class="hidden" style="text-align: center; padding: 50px;">
+            <h1 style="color: var(--accent);">CASE CLOSED</h1>
+            <p>100개의 모든 단서를 해독했습니다. 당신은 최고의 탐정입니다.</p>
+            <button class="next-btn" onclick="location.reload()">처음부터 다시</button>
         </div>
     </div>
 
     <script>
+        const stories = [
+            { trigger: 0, title: "INTRO: 사라진 블루 벨", content: "박물관의 보물 '블루 벨'이 도난당했습니다.\n현장의 암호를 풀어 첫 번째 단서를 확보하십시오!" },
+            { trigger: 20, title: "QUEST: 용의자 심문", content: "용의자들의 진술에서 모순을 찾아내야 합니다.\n그들이 사용하는 전치사들을 유심히 살피십시오." },
+            { trigger: 40, title: "QUEST: 증거 재구성", content: "범인이 증거를 교체하고 변형한 흔적을 발견했습니다.\n데이터를 대조하여 범행 수법을 밝히십시오." },
+            { trigger: 60, title: "QUEST: 마지막 추격", content: "범인의 은신처를 찾아냈습니다!\n정확한 법적 용어로 체포 영장을 완성하십시오." },
+            { trigger: 80, title: "QUEST: 정의 구현", content: "범인을 취조실에 가두었습니다.\n모든 기록을 정리하여 사건을 종결하십시오." }
+        ];
+
         const allData = [
-            // STAGE 1: 현장 조사 (1-20)
+            /* 1-20 */
             { v: "attribute", p: "to", ko: "사건을 보안 요원의 실수로 [돌리다].", en: "The captain tried to ___ the error ___ the rookie's negligence." },
             { v: "ascribe", p: "to", ko: "시스템 오류를 노후 장비의 결과로 [여기다].", en: "Experts ___ the glitch ___ outdated hardware." },
             { v: "distinguish", p: "from", ko: "진짜와 가짜를 [구별하다].", en: "A pro can ___ the fake diamond ___ the real one." },
@@ -78,8 +84,7 @@
             { v: "consist", p: "of", ko: "팀은 5명으로 [구성되다].", en: "The unit will ___ five elite members ___." },
             { v: "clear", p: "of", ko: "혐의를 [벗겨주다].", en: "The evidence will ___ him ___ all charges." },
             { v: "relieve", p: "of", ko: "부담을 [덜어주다].", en: "This find will ___ me ___ the pressure." },
-
-            // STAGE 2: 용의자 심문 (21-40)
+            /* 21-40 */
             { v: "accuse", p: "of", ko: "A를 살인 혐의로 [비난/고발하다].", en: "They ___ the butler ___ the murder." },
             { v: "charge", p: "with", ko: "범인을 절도로 [기소하다].", en: "The police will ___ her ___ grand larceny." },
             { v: "blame", p: "for", ko: "실수를 A의 [탓으로 비난하다].", en: "Don't ___ the helper ___ the broken glass." },
@@ -100,8 +105,7 @@
             { v: "respond", p: "to", ko: "질문에 [반응/응답하다].", en: "The witness didn't ___ any questions ___." },
             { v: "apologize", p: "for", ko: "지연에 대해 [사과하다].", en: "I must ___ the delay ___." },
             { v: "listen", p: "to", ko: "경고를 [경청하다].", en: "You should ___ my advice ___ carefully." },
-
-            // STAGE 3: 분석 (41-60)
+            /* 41-60 */
             { v: "associate", p: "with", ko: "A를 B와 [연관시키다].", en: "Never ___ this man ___ the mafia." },
             { v: "identify", p: "with", ko: "A를 B와 [동일시하다].", en: "The public will ___ the hero ___ justice." },
             { v: "equate", p: "with", ko: "A와 B를 [동등하게 생각하다].", en: "Do not ___ money ___ happiness." },
@@ -112,7 +116,7 @@
             { v: "replace", p: "with", ko: "A를 B로 [교체하다].", en: "We will ___ the old lock ___ a new one." },
             { v: "transform", p: "into", ko: "A를 B로 [변형시키다].", en: "Magicians can ___ a bird ___ a flower." },
             { v: "translate", p: "into", ko: "A를 B로 [번역하다].", en: "Please ___ this code ___ English." },
-            { v: "add", p: "to", ko: "설탕을 [더하다].", en: "I want to ___ some salt ___ the soup." },
+            { v: "add", p: "to", ko: "A를 B에 [더하다].", en: "I want to ___ some salt ___ the soup." },
             { v: "attach", p: "to", ko: "파일을 [첨부하다].", en: "Please ___ the photo ___ the email." },
             { v: "concentrate", p: "on", ko: "일에 [집중하다].", en: "You need to ___ the task ___." },
             { v: "experiment", p: "with", ko: "새 기법으로 [실험하다].", en: "The scientist will ___ the new virus ___." },
@@ -122,8 +126,7 @@
             { v: "derive", p: "from", ko: "전통에서 [유래하다].", en: "Many words ___ Latin ___." },
             { v: "result", p: "in", ko: "사고를 [야기하다].", en: "Speeding will ___ an accident ___." },
             { v: "result", p: "from", ko: "방심에서 [기인하다].", en: "Failure will ___ lack of effort ___." },
-
-            // STAGE 4: 검거 (61-80)
+            /* 61-80 */
             { v: "refer", p: "to", ko: "A를 B라고 [부르다/언급하다].", en: "Don't ___ him ___ a coward." },
             { v: "regard", p: "as", ko: "그를 천재로 [간주하다].", en: "People ___ him ___ a mastermind." },
             { v: "view", p: "as", ko: "상황을 기회로 [보다].", en: "We should ___ this crisis ___ a chance." },
@@ -144,10 +147,9 @@
             { v: "entitle", p: "to", ko: "자격을 [주다].", en: "This card will ___ you ___ a discount." },
             { v: "pay", p: "for", ko: "저녁값을 [지불하다].", en: "I will ___ the meal ___." },
             { v: "dispose", p: "of", ko: "쓰레기를 [처분하다].", en: "Please ___ the waste ___ properly." },
-
-            // STAGE 5: 마무리 (81-100)
+            /* 81-100 */
             { v: "devote", p: "to", ko: "인생을 예술에 [바치다].", en: "She will ___ her life ___ music." },
-            { v: "commit", p: "to", ko: "일무에 [전념하다].", en: "You must ___ yourself ___ the project." },
+            { v: "commit", p: "to", ko: "임무에 [전념하다].", en: "You must ___ yourself ___ the project." },
             { v: "accustom", p: "to", ko: "환경에 [익숙해지다].", en: "I need to ___ myself ___ the heat." },
             { v: "belong", p: "to", ko: "클럽에 [속하다].", en: "Does this book ___ you ___?" },
             { v: "specialize", p: "in", ko: "수학을 [전문으로 하다].", en: "The doctor will ___ surgery ___." },
@@ -168,97 +170,63 @@
             { v: "wait", p: "for", ko: "버스를 [기다리다].", en: "I will ___ you ___ at the station." }
         ];
 
-        let currentIdx = 0;
-        let selectedVerb = "";
-        let selectedPrep = "";
+        let idx = 0;
+        let selV = "";
+        let selP = "";
 
-        const stageTitles = ["STAGE 1: 현장 조사", "STAGE 2: 용의자 심문", "STAGE 3: 증거 분석", "STAGE 4: 범인 검거", "STAGE 5: 사건 종결"];
+        const stageNames = ["STAGE 1: 현장 조사", "STAGE 2: 용의자 심문", "STAGE 3: 증거 분석", "STAGE 4: 범인 검거", "STAGE 5: 사건 종결"];
 
-        function initGame() {
-            renderQuestion();
+        function checkStory() {
+            const story = stories.find(s => s.trigger === idx);
+            if(story) {
+                document.getElementById('story-text').innerHTML = `<h2 style="color:#fff">${story.title}</h2>${story.content}`;
+                document.getElementById('story-overlay').classList.remove('hidden');
+            }
         }
 
-        function renderQuestion() {
-            if (currentIdx >= allData.length) {
+        function closeStory() { document.getElementById('story-overlay').classList.add('hidden'); }
+
+        function draw() {
+            if(idx >= allData.length) {
                 document.getElementById('play-area').classList.add('hidden');
-                document.getElementById('ending-screen').classList.remove('hidden');
+                document.getElementById('ending').classList.remove('hidden');
                 return;
             }
-
-            const data = allData[currentIdx];
-            const stageNum = Math.floor(currentIdx / 20);
-            document.getElementById('stage-title').textContent = stageTitles[stageNum];
-            document.getElementById('progress-text').textContent = `${currentIdx + 1} / 100`;
-            document.getElementById('progress-bar').style.width = `${(currentIdx / 100) * 100}%`;
-
-            document.getElementById('ko-desc').textContent = data.ko;
+            checkStory();
+            const data = allData[idx];
+            document.getElementById('stage-title').innerText = stageNames[Math.floor(idx/20)];
+            document.getElementById('progress-text').innerText = `${idx + 1} / 100`;
+            document.getElementById('progress-bar').style.width = `${idx}%`;
+            document.getElementById('ko-desc').innerText = data.ko;
+            const pts = data.en.split('___');
+            document.getElementById('en-sentence').innerHTML = `${pts[0]}<span class="slot">${selV || '?'}</span>${pts[1]}<span class="slot">${selP || '?'}</span>${pts[2]||''}`;
             
-            // 문장 렌더링
-            const parts = data.en.split('___');
-            document.getElementById('en-sentence').innerHTML = `
-                ${parts[0]}<span class="slot" id="v-slot">${selectedVerb || '?'}</span>
-                ${parts[1]}<span class="slot" id="p-slot">${selectedPrep || '?'}</span>${parts[2] || ''}
-            `;
-
-            // 보기 생성
-            renderOptions(data);
-        }
-
-        function renderOptions(data) {
-            const container = document.getElementById('options');
-            container.innerHTML = "";
-            
-            // 정답 + 무작위 오답 섞기
-            let pool = [data.v, data.p, "of", "with", "to", "from", "for", "on", "in", "at", "into account", "for granted", "as"];
-            let uniquePool = [...new Set(pool)].sort(() => Math.random() - 0.5).slice(0, 8);
-            if(!uniquePool.includes(data.v)) uniquePool[0] = data.v;
-            if(!uniquePool.includes(data.p)) uniquePool[1] = data.p;
-            uniquePool.sort(() => Math.random() - 0.5);
-
-            uniquePool.forEach(word => {
-                const btn = document.createElement('button');
-                btn.className = 'word-btn';
-                btn.textContent = word;
-                btn.onclick = () => handleSelect(word, data);
-                container.appendChild(btn);
+            const ops = document.getElementById('options');
+            ops.innerHTML = "";
+            let pool = [data.v, data.p, "of", "to", "from", "with", "for", "on", "in", "into account", "for granted", "as", "at"];
+            let shuffle = [...new Set(pool)].sort(() => Math.random() - 0.5).slice(0, 8);
+            if(!shuffle.includes(data.v)) shuffle[0] = data.v;
+            if(!shuffle.includes(data.p)) shuffle[1] = data.p;
+            shuffle.sort(() => Math.random() - 0.5).forEach(w => {
+                const b = document.createElement('button');
+                b.className = 'word-btn';
+                b.innerText = w;
+                b.onclick = () => {
+                    const fb = document.getElementById('feedback');
+                    if(!selV) {
+                        if(w === data.v) { selV = w; fb.innerText = "Good! Preposition next."; fb.style.color = "var(--accent)"; draw(); }
+                        else { fb.innerText = "Wrong Verb."; fb.style.color = "var(--error)"; }
+                    } else {
+                        if(w === data.p) { 
+                            selP = w; fb.innerText = "Perfect!"; fb.style.color = "var(--accent)"; draw();
+                            setTimeout(() => { idx++; selV = ""; selP = ""; fb.innerText = ""; draw(); }, 600);
+                        } else { fb.innerText = "Wrong Preposition."; fb.style.color = "var(--error)"; }
+                    }
+                };
+                ops.appendChild(b);
             });
         }
-
-        function handleSelect(word, data) {
-            const feedback = document.getElementById('feedback');
-            
-            if (!selectedVerb) {
-                if (word === data.v) {
-                    selectedVerb = word;
-                    feedback.textContent = "좋습니다. 이제 전치사를 선택하세요.";
-                    feedback.style.color = "var(--accent)";
-                    renderQuestion();
-                } else {
-                    feedback.textContent = "옳지 않은 동사입니다.";
-                    feedback.style.color = "var(--error)";
-                }
-            } else {
-                if (word === data.p) {
-                    selectedPrep = word;
-                    feedback.textContent = "완벽한 문장입니다!";
-                    feedback.style.color = "var(--accent)";
-                    renderQuestion();
-                    
-                    setTimeout(() => {
-                        currentIdx++;
-                        selectedVerb = "";
-                        selectedPrep = "";
-                        feedback.textContent = "";
-                        renderQuestion();
-                    }, 800);
-                } else {
-                    feedback.textContent = "전치사가 틀렸습니다.";
-                    feedback.style.color = "var(--error)";
-                }
-            }
-        }
-
-        initGame();
+        draw();
     </script>
 </body>
 </html>
