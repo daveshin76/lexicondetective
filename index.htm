@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lexical Detective: 100 Phrases</title>
+    <style>
+        :root { --bg: #0a0a0c; --card: #16161a; --accent: #00e676; --error: #ff5252; --text: #eceff1; }
+        body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; flex-direction: column; align-items: center; margin: 0; padding: 20px; min-height: 100vh; }
+        #game-board { width: 100%; max-width: 800px; background: var(--card); border: 1px solid #333; border-radius: 12px; padding: 30px; box-shadow: 0 20px 50px rgba(0,0,0,0.7); position: relative; }
+        .header { border-bottom: 2px solid #333; padding-bottom: 15px; margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center; }
+        #stage-title { color: var(--accent); font-weight: bold; font-size: 1.2rem; }
+        #sentence-container { background: #212121; padding: 25px; border-radius: 8px; margin-bottom: 30px; border-left: 5px solid var(--accent); }
+        #ko-desc { font-size: 1rem; color: #aaa; margin-bottom: 15px; line-height: 1.5; }
+        #en-sentence { font-size: 1.4rem; line-height: 1.8; letter-spacing: 0.5px; }
+        .slot { display: inline-block; min-width: 100px; border-bottom: 2px solid var(--accent); text-align: center; margin: 0 8px; color: var(--accent); padding: 0 5px; cursor: default; }
+        #options { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+        .word-btn { background: #2c2c2c; border: 1px solid #444; color: var(--text); padding: 12px; border-radius: 6px; cursor: pointer; transition: all 0.2s; font-size: 1rem; }
+        .word-btn:hover { background: #3d3d3d; border-color: var(--accent); }
+        .word-btn:active { transform: scale(0.95); }
+        #feedback { margin-top: 20px; text-align: center; height: 30px; font-weight: bold; font-size: 1.1rem; }
+        .progress-container { width: 100%; height: 6px; background: #333; border-radius: 3px; margin-top: 30px; overflow: hidden; }
+        #progress-bar { height: 100%; width: 0%; background: var(--accent); transition: width 0.3s ease; }
+        .hidden { display: none; }
+        #ending-screen { text-align: center; padding: 50px; }
+        #ending-screen h2 { color: var(--accent); font-size: 2.5rem; }
+    </style>
+</head>
+<body>
+
+    <h2 style="margin-bottom: 10px; letter-spacing: 2px;">LEXICAL DETECTIVE</h2>
+    <p style="margin-bottom: 30px; color: #777;">100개의 단어로 사건을 해결하고 장기 기억을 완성하십시오.</p>
+
+    <div id="game-board">
+        <div id="play-area">
+            <div class="header">
+                <div id="stage-title">STAGE 1: 현장 조사</div>
+                <div id="progress-text">0 / 100</div>
+            </div>
+
+            <div id="sentence-container">
+                <div id="ko-desc"></div>
+                <div id="en-sentence"></div>
+            </div>
+
+            <div id="options"></div>
+            <div id="feedback"></div>
+            <div class="progress-container"><div id="progress-bar"></div></div>
+        </div>
+
+        <div id="ending-screen" class="hidden">
+            <h2>CASE CLOSED</h2>
+            <p>축하합니다! 100개의 핵심 구문을 모두 마스터하여 범인을 검거했습니다.</p>
+            <button class="word-btn" onclick="location.reload()">다시 수사하기</button>
+        </div>
+    </div>
+
+    <script>
+        const allData = [
+            // STAGE 1: 현장 조사 (1-20)
+            { v: "attribute", p: "to", ko: "사건을 보안 요원의 실수로 [돌리다].", en: "The captain tried to ___ the error ___ the rookie's negligence." },
+            { v: "ascribe", p: "to", ko: "시스템 오류를 노후 장비의 결과로 [여기다].", en: "Experts ___ the glitch ___ outdated hardware." },
+            { v: "distinguish", p: "from", ko: "진짜와 가짜를 [구별하다].", en: "A pro can ___ the fake diamond ___ the real one." },
+            { v: "differentiate", p: "from", ko: "범행 수법을 일반 절도와 [차별화하다].", en: "We must ___ this case ___ simple theft." },
+            { v: "keep", p: "from", ko: "A가 경보를 울리는 것을 [막다].", en: "The thief tried to ___ the guard ___ ringing the alarm." },
+            { v: "prevent", p: "from", ko: "범인이 도망가는 것을 [예방하다].", en: "This fence will ___ the suspect ___ escaping." },
+            { v: "prohibit", p: "from", ko: "접근을 [금지하다].", en: "The law will ___ them ___ entering the vault." },
+            { v: "take", p: "into account", ko: "모든 가능성을 [고려하다].", en: "You must ___ every clue ___ during the investigation." },
+            { v: "take", p: "for granted", ko: "보안을 [당연하게 여기다].", en: "Never ___ the safety of the museum ___." },
+            { v: "provide", p: "with", ko: "탐정에게 장비를 [제공하다].", en: "The lab will ___ you ___ high-tech tools." },
+            { v: "present", p: "with", ko: "증거를 [제시하다].", en: "I will ___ the witness ___ a photograph." },
+            { v: "look", p: "at", ko: "현장을 [보다].", en: "Please ___ the footprints ___ the floor." },
+            { v: "look", p: "for", ko: "사라진 보석을 [찾다].", en: "The team will ___ the missing gem ___ hours." },
+            { v: "look", p: "into", ko: "사건을 [조사하다].", en: "The FBI will ___ the mystery ___ detail." },
+            { v: "base", p: "on", ko: "추론을 사실에 [근거를 두다].", en: "I ___ my theory ___ the DNA results." },
+            { v: "derive", p: "from", ko: "단서를 현장에서 [이끌어내다].", en: "We ___ crucial information ___ the diary." },
+            { v: "emerge", p: "from", ko: "그림자에서 [나타나다].", en: "A tall man began to ___ the shadows ___." },
+            { v: "consist", p: "of", ko: "팀은 5명으로 [구성되다].", en: "The unit will ___ five elite members ___." },
+            { v: "clear", p: "of", ko: "혐의를 [벗겨주다].", en: "The evidence will ___ him ___ all charges." },
+            { v: "relieve", p: "of", ko: "부담을 [덜어주다].", en: "This find will ___ me ___ the pressure." },
+
+            // STAGE 2: 용의자 심문 (21-40)
+            { v: "accuse", p: "of", ko: "A를 살인 혐의로 [비난/고발하다].", en: "They ___ the butler ___ the murder." },
+            { v: "charge", p: "with", ko: "범인을 절도로 [기소하다].", en: "The police will ___ her ___ grand larceny." },
+            { v: "blame", p: "for", ko: "실수를 A의 [탓으로 비난하다].", en: "Don't ___ the helper ___ the broken glass." },
+            { v: "remind", p: "of", ko: "그에게 사건을 [상기시키다].", en: "This smell will ___ him ___ the night of crime." },
+            { v: "inform", p: "of", ko: "권리를 [알리다].", en: "We must ___ the suspect ___ his rights." },
+            { v: "warn", p: "of", ko: "위험을 [경고하다].", en: "The sign will ___ you ___ the high voltage." },
+            { v: "deprive", p: "of", ko: "자유를 [박탈하다].", en: "The arrest will ___ him ___ his freedom." },
+            { v: "rob", p: "of", ko: "귀중품을 [강탈하다].", en: "The bandit tried to ___ the lady ___ her pearls." },
+            { v: "impose", p: "on", ko: "벌금을 [부과하다].", en: "The judge will ___ a heavy fine ___ the thief." },
+            { v: "insist", p: "on", ko: "무죄를 [주장하다].", en: "He will ___ his innocence ___ till the end." },
+            { v: "persist", p: "in", ko: "침묵을 [고집하다].", en: "She will ___ her silence ___." },
+            { v: "complain", p: "about", ko: "음식에 대해 [불평하다].", en: "The prisoner started to ___ the cold ___." },
+            { v: "object", p: "to", ko: "수사에 [반대하다].", en: "The lawyer will ___ the unfair question ___." },
+            { v: "comply", p: "with", ko: "명령을 [준수하다].", en: "You must ___ our request ___ immediately." },
+            { v: "conform", p: "to", ko: "규칙에 [순응하다].", en: "All visitors must ___ the safety rules ___." },
+            { v: "interfere", p: "with", ko: "업무를 [방해하다].", en: "Do not ___ our investigation ___." },
+            { v: "cope", p: "with", ko: "스트레스를 [다루다/대처하다].", en: "The victim is trying to ___ the trauma ___." },
+            { v: "respond", p: "to", ko: "질문에 [반응/응답하다].", en: "The witness didn't ___ any questions ___." },
+            { v: "apologize", p: "for", ko: "지연에 대해 [사과하다].", en: "I must ___ the delay ___." },
+            { v: "listen", p: "to", ko: "경고를 [경청하다].", en: "You should ___ my advice ___ carefully." },
+
+            // STAGE 3: 분석 (41-60)
+            { v: "associate", p: "with", ko: "A를 B와 [연관시키다].", en: "Never ___ this man ___ the mafia." },
+            { v: "identify", p: "with", ko: "A를 B와 [동일시하다].", en: "The public will ___ the hero ___ justice." },
+            { v: "equate", p: "with", ko: "A와 B를 [동등하게 생각하다].", en: "Do not ___ money ___ happiness." },
+            { v: "compare", p: "to", ko: "A를 B에 [비유하다].", en: "He will ___ the crime ___ a chess game." },
+            { v: "compare", p: "with", ko: "A와 B를 [비교하다].", en: "We must ___ this fingerprint ___ the suspect's." },
+            { v: "exchange", p: "for", ko: "A를 B와 [교환하다].", en: "The spy will ___ the secret ___ money." },
+            { v: "substitute", p: "for", ko: "B 대신 A를 [쓰다].", en: "You can ___ honey ___ sugar." },
+            { v: "replace", p: "with", ko: "A를 B로 [교체하다].", en: "We will ___ the old lock ___ a new one." },
+            { v: "transform", p: "into", ko: "A를 B로 [변형시키다].", en: "Magicians can ___ a bird ___ a flower." },
+            { v: "translate", p: "into", ko: "A를 B로 [번역하다].", en: "Please ___ this code ___ English." },
+            { v: "add", p: "to", ko: "설탕을 [더하다].", en: "I want to ___ some salt ___ the soup." },
+            { v: "attach", p: "to", ko: "파일을 [첨부하다].", en: "Please ___ the photo ___ the email." },
+            { v: "concentrate", p: "on", ko: "일에 [집중하다].", en: "You need to ___ the task ___." },
+            { v: "experiment", p: "with", ko: "새 기법으로 [실험하다].", en: "The scientist will ___ the new virus ___." },
+            { v: "coincide", p: "with", ko: "시간이 [일치하다].", en: "The theft will ___ the party ___." },
+            { v: "collide", p: "with", ko: "차와 [충돌하다].", en: "The truck will ___ the wall ___." },
+            { v: "depart", p: "from", ko: "계획에서 [벗어나다].", en: "The plane will ___ the airport ___ soon." },
+            { v: "derive", p: "from", ko: "전통에서 [유래하다].", en: "Many words ___ Latin ___." },
+            { v: "result", p: "in", ko: "사고를 [야기하다].", en: "Speeding will ___ an accident ___." },
+            { v: "result", p: "from", ko: "방심에서 [기인하다].", en: "Failure will ___ lack of effort ___." },
+
+            // STAGE 4: 검거 (61-80)
+            { v: "refer", p: "to", ko: "A를 B라고 [부르다/언급하다].", en: "Don't ___ him ___ a coward." },
+            { v: "regard", p: "as", ko: "그를 천재로 [간주하다].", en: "People ___ him ___ a mastermind." },
+            { v: "view", p: "as", ko: "상황을 기회로 [보다].", en: "We should ___ this crisis ___ a chance." },
+            { v: "confine", p: "to", ko: "그를 방에 [가두다].", en: "They will ___ the prisoner ___ a cell." },
+            { v: "expose", p: "to", ko: "위험에 [노출시키다].", en: "Do not ___ the child ___ cold weather." },
+            { v: "protect", p: "from", ko: "추위로부터 [보호하다].", en: "This coat will ___ you ___ the snow." },
+            { v: "share", p: "with", ko: "비밀을 [공유하다].", en: "I will ___ the news ___ you." },
+            { v: "congratulate", p: "on", ko: "성공을 [축하하다].", en: "I want to ___ you ___ your promotion." },
+            { v: "succeed", p: "in", ko: "임무에 [성공하다].", en: "We will ___ catching the thief ___." },
+            { v: "participate", p: "in", ko: "대회에 [참여하다].", en: "Many people will ___ the race ___." },
+            { v: "contribute", p: "to", ko: "성공에 [기여하다].", en: "Hard work will ___ your success ___." },
+            { v: "lead", p: "to", ko: "결과로 [이어지다].", en: "Stress can ___ health problems ___." },
+            { v: "resort", p: "to", ko: "폭력에 [호소하다].", en: "Never ___ violence ___." },
+            { v: "depend", p: "on", ko: "운에 [의존하다].", en: "Success doesn't ___ only ___ luck." },
+            { v: "count", p: "on", ko: "친구를 [믿다].", en: "You can always ___ me ___." },
+            { v: "apply", p: "for", ko: "비자를 [신청하다].", en: "He will ___ the job ___ tomorrow." },
+            { v: "apply", p: "to", ko: "모두에게 [적용되다].", en: "This rule doesn't ___ kids ___." },
+            { v: "entitle", p: "to", ko: "자격을 [주다].", en: "This card will ___ you ___ a discount." },
+            { v: "pay", p: "for", ko: "저녁값을 [지불하다].", en: "I will ___ the meal ___." },
+            { v: "dispose", p: "of", ko: "쓰레기를 [처분하다].", en: "Please ___ the waste ___ properly." },
+
+            // STAGE 5: 마무리 (81-100)
+            { v: "devote", p: "to", ko: "인생을 예술에 [바치다].", en: "She will ___ her life ___ music." },
+            { v: "commit", p: "to", ko: "일무에 [전념하다].", en: "You must ___ yourself ___ the project." },
+            { v: "accustom", p: "to", ko: "환경에 [익숙해지다].", en: "I need to ___ myself ___ the heat." },
+            { v: "belong", p: "to", ko: "클럽에 [속하다].", en: "Does this book ___ you ___?" },
+            { v: "specialize", p: "in", ko: "수학을 [전문으로 하다].", en: "The doctor will ___ surgery ___." },
+            { v: "succeed", p: "to", ko: "왕위를 [계승하다].", en: "Prince Charles will ___ the throne ___." },
+            { v: "subscribe", p: "to", ko: "잡지를 [구독하다].", en: "I want to ___ this channel ___." },
+            { v: "amount", p: "to", ko: "합계가 100달러에 [이르다].", en: "The bill will ___ $500 ___." },
+            { v: "appeal", p: "to", ko: "대중에게 [호소하다].", en: "The movie will ___ everyone ___." },
+            { v: "care", p: "for", ko: "환자를 [돌보다].", en: "Who will ___ the cats ___?" },
+            { v: "complain", p: "about", ko: "소음에 [불평하다].", en: "They always ___ the weather ___." },
+            { v: "concentrate", p: "on", ko: "공부에 [집중하다].", en: "You should ___ your work ___." },
+            { v: "consist", p: "in", ko: "행복은 마음에 [있다].", en: "True beauty ___ kindness ___." },
+            { v: "graduate", p: "from", ko: "대학을 [졸업하다].", en: "He will ___ Harvard ___ next year." },
+            { v: "long", p: "for", ko: "자유를 [갈망하다].", en: "The sailor will ___ home ___." },
+            { v: "prepare", p: "for", ko: "시험을 [준비하다].", en: "We must ___ the winter ___." },
+            { v: "profit", p: "from", ko: "조언에서 이익을 [얻다].", en: "You can ___ this experience ___." },
+            { v: "refrain", p: "from", ko: "흡연을 [삼가다].", en: "Please ___ smoking ___." },
+            { v: "strive", p: "for", ko: "평화를 위해 [노력하다].", en: "We must ___ excellence ___." },
+            { v: "wait", p: "for", ko: "버스를 [기다리다].", en: "I will ___ you ___ at the station." }
+        ];
+
+        let currentIdx = 0;
+        let selectedVerb = "";
+        let selectedPrep = "";
+
+        const stageTitles = ["STAGE 1: 현장 조사", "STAGE 2: 용의자 심문", "STAGE 3: 증거 분석", "STAGE 4: 범인 검거", "STAGE 5: 사건 종결"];
+
+        function initGame() {
+            renderQuestion();
+        }
+
+        function renderQuestion() {
+            if (currentIdx >= allData.length) {
+                document.getElementById('play-area').classList.add('hidden');
+                document.getElementById('ending-screen').classList.remove('hidden');
+                return;
+            }
+
+            const data = allData[currentIdx];
+            const stageNum = Math.floor(currentIdx / 20);
+            document.getElementById('stage-title').textContent = stageTitles[stageNum];
+            document.getElementById('progress-text').textContent = `${currentIdx + 1} / 100`;
+            document.getElementById('progress-bar').style.width = `${(currentIdx / 100) * 100}%`;
+
+            document.getElementById('ko-desc').textContent = data.ko;
+            
+            // 문장 렌더링
+            const parts = data.en.split('___');
+            document.getElementById('en-sentence').innerHTML = `
+                ${parts[0]}<span class="slot" id="v-slot">${selectedVerb || '?'}</span>
+                ${parts[1]}<span class="slot" id="p-slot">${selectedPrep || '?'}</span>${parts[2] || ''}
+            `;
+
+            // 보기 생성
+            renderOptions(data);
+        }
+
+        function renderOptions(data) {
+            const container = document.getElementById('options');
+            container.innerHTML = "";
+            
+            // 정답 + 무작위 오답 섞기
+            let pool = [data.v, data.p, "of", "with", "to", "from", "for", "on", "in", "at", "into account", "for granted", "as"];
+            let uniquePool = [...new Set(pool)].sort(() => Math.random() - 0.5).slice(0, 8);
+            if(!uniquePool.includes(data.v)) uniquePool[0] = data.v;
+            if(!uniquePool.includes(data.p)) uniquePool[1] = data.p;
+            uniquePool.sort(() => Math.random() - 0.5);
+
+            uniquePool.forEach(word => {
+                const btn = document.createElement('button');
+                btn.className = 'word-btn';
+                btn.textContent = word;
+                btn.onclick = () => handleSelect(word, data);
+                container.appendChild(btn);
+            });
+        }
+
+        function handleSelect(word, data) {
+            const feedback = document.getElementById('feedback');
+            
+            if (!selectedVerb) {
+                if (word === data.v) {
+                    selectedVerb = word;
+                    feedback.textContent = "좋습니다. 이제 전치사를 선택하세요.";
+                    feedback.style.color = "var(--accent)";
+                    renderQuestion();
+                } else {
+                    feedback.textContent = "옳지 않은 동사입니다.";
+                    feedback.style.color = "var(--error)";
+                }
+            } else {
+                if (word === data.p) {
+                    selectedPrep = word;
+                    feedback.textContent = "완벽한 문장입니다!";
+                    feedback.style.color = "var(--accent)";
+                    renderQuestion();
+                    
+                    setTimeout(() => {
+                        currentIdx++;
+                        selectedVerb = "";
+                        selectedPrep = "";
+                        feedback.textContent = "";
+                        renderQuestion();
+                    }, 800);
+                } else {
+                    feedback.textContent = "전치사가 틀렸습니다.";
+                    feedback.style.color = "var(--error)";
+                }
+            }
+        }
+
+        initGame();
+    </script>
+</body>
+</html>
